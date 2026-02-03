@@ -84,15 +84,19 @@ function createTowerWall(
   z: number,
   width: number,
   height: number,
-  depth: number
+  depth: number,
+  color: number = 0x8b4513,
+  opacity: number = 0.6
 ) {
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const mesh = new THREE.Mesh(
     geometry,
     new THREE.MeshStandardMaterial({ 
-      color: 0x8b4513,
+      color: color,
       transparent: true,
-      opacity: 0.6
+      opacity: opacity,
+      depthWrite: false, // Prevents z-fighting with transparent objects
+      side: THREE.DoubleSide // Render both sides for better transparency
     })
   );
   mesh.position.set(x, y, z);
@@ -116,36 +120,36 @@ const towerHeight = 8;
 const wallThickness = 0.15;
 
 // Back wall (full height)
-createTowerWall(0, towerHeight / 2, -towerDepth / 2, towerWidth, towerHeight, wallThickness);
+createTowerWall(0, towerHeight / 2, -towerDepth / 2, towerWidth, towerHeight, wallThickness, 0x8b4513, 0.2);
 
 // Left wall (full height)
-createTowerWall(-towerWidth / 2, towerHeight / 2, 0, wallThickness, towerHeight, towerDepth);
+createTowerWall(-towerWidth / 2, towerHeight / 2, 0, wallThickness, towerHeight, towerDepth, 0x8b4513, 0.2);
 
 // Right wall (full height)
-createTowerWall(towerWidth / 2, towerHeight / 2, 0, wallThickness, towerHeight, towerDepth);
+createTowerWall(towerWidth / 2, towerHeight / 2, 0, wallThickness, towerHeight, towerDepth, 0x8b4513, 0.2);
 
 // Front wall with gap at bottom (upper portion only)
 const frontWallHeight = towerHeight - 2; // Leave 2 units gap at bottom
 const frontWallYPos = 2 + frontWallHeight / 2; // Start 2 units up from ground
-createTowerWall(0, frontWallYPos, towerDepth / 2, towerWidth, frontWallHeight, wallThickness);
+createTowerWall(0, frontWallYPos, towerDepth / 2, towerWidth, frontWallHeight, wallThickness, 0x8b4513, 0.2);
 
 // Internal obstacle walls (rotating to jostle the dice)
 const rotatingObstacles: Array<{ mesh: THREE.Mesh; body: CANNON.Body; speed: number; axis: 'x' | 'y' | 'z' }> = [];
 
 // Upper obstacle - rotates around Y axis
-const obstacle1 = createTowerWall(0.3, 6, -0.3, 1, wallThickness, 1.5);
+const obstacle1 = createTowerWall(0.3, 6, -0.3, 1, wallThickness, 1.5, 0x00ff00, 0.9);
 obstacle1.mesh.rotation.z = -0.3;
 obstacle1.body.quaternion.setFromEuler(0, 0, -0.3);
 rotatingObstacles.push({ ...obstacle1, speed: 0.5, axis: 'y' });
 
 // Middle obstacle - rotates around Y axis (opposite direction)
-const obstacle2 = createTowerWall(-0.3, 4, 0.3, 1, wallThickness, 1.5);
+const obstacle2 = createTowerWall(-0.3, 4, 0.3, 1, wallThickness, 1.5, 0xff6600, 0.9);
 obstacle2.mesh.rotation.z = 0.3;
 obstacle2.body.quaternion.setFromEuler(0, 0, 0.3);
 rotatingObstacles.push({ ...obstacle2, speed: -0.7, axis: 'y' });
 
 // Lower obstacle - rotates around Y axis
-const obstacle3 = createTowerWall(0.2, 2, -0.2, 1, wallThickness, 1.2);
+const obstacle3 = createTowerWall(0.2, 2, -0.2, 1, wallThickness, 1.2, 0xff0000, 0.9);
 obstacle3.mesh.rotation.z = -0.3;
 obstacle3.body.quaternion.setFromEuler(0, 0, -0.3);
 rotatingObstacles.push({ ...obstacle3, speed: 0.6, axis: 'y' });
