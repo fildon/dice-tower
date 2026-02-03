@@ -122,3 +122,57 @@ button:active {
   font-style: italic;
   font-size: 14px;
 }
+
+/* Mobile responsive layout */
+@media (max-width: 768px) {
+  #result {
+    top: 10px;
+    font-size: 24px;
+    padding: 10px 20px;
+    min-width: 150px;
+  }
+
+  #history {
+    top: auto;
+    bottom: 80px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: 25vh;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  #history h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  #historyList {
+    gap: 6px;
+  }
+
+  .history-item {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .history-number {
+    font-size: 16px;
+  }
+
+  .history-time {
+    font-size: 10px;
+  }
+
+  #controls {
+    bottom: 10px;
+    gap: 8px;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
