@@ -168,7 +168,7 @@ emptyMessage.className = 'history-empty';
 emptyMessage.textContent = 'No rolls yet!';
 historyList.appendChild(emptyMessage);
 
-function addToHistory(roll: number) {
+function addToHistory(roll: number, dieType: string) {
   // Remove empty message if it exists
   const emptyMessage = historyList.querySelector('.history-empty');
   if (emptyMessage) {
@@ -178,6 +178,10 @@ function addToHistory(roll: number) {
   const historyItem = document.createElement('div');
   historyItem.className = 'history-item';
   
+  const dieTypeSpan = document.createElement('span');
+  dieTypeSpan.className = 'history-die-type';
+  dieTypeSpan.textContent = dieType;
+  
   const numberSpan = document.createElement('span');
   numberSpan.className = 'history-number';
   numberSpan.textContent = roll.toString();
@@ -186,6 +190,7 @@ function addToHistory(roll: number) {
   timeSpan.className = 'history-time';
   timeSpan.textContent = new Date().toLocaleTimeString();
   
+  historyItem.appendChild(dieTypeSpan);
   historyItem.appendChild(numberSpan);
   historyItem.appendChild(timeSpan);
   
@@ -198,22 +203,26 @@ function addToHistory(roll: number) {
   }
 }
 
-// Roll button
-const rollButton = document.getElementById('rollButton') as HTMLButtonElement;
-rollButton.addEventListener('click', () => {
-  // Clear result display
-  resultDisplay.textContent = '';
-  
-  // Clear old dice
-  diceList.forEach((dice) => {
-    scene.remove(dice.mesh);
-    world.removeBody(dice.body);
-  });
-  diceList.length = 0;
+// Die type buttons
+const dieButtons = document.querySelectorAll('.dieButton');
+dieButtons.forEach(button => {
+  button.addEventListener('click', (e) => {
+    const sides = parseInt((e.target as HTMLElement).getAttribute('data-sides') || '6');
+    
+    // Clear result display
+    resultDisplay.textContent = '';
+    
+    // Clear old dice
+    diceList.forEach((dice) => {
+      scene.remove(dice.mesh);
+      world.removeBody(dice.body);
+    });
+    diceList.length = 0;
 
-  // Add new dice at the top of the tower (centered, near the back)
-  const dice = new Dice(0, 7.5, -0.5, scene, world, diceMaterial);
-  diceList.push(dice);
+    // Add new dice at the top of the tower (centered, near the back)
+    const dice = new Dice(0, 7.5, -0.5, scene, world, diceMaterial, sides);
+    diceList.push(dice);
+  });
 });
 
 // Animation loop
@@ -233,8 +242,9 @@ function animate() {
   diceList.forEach((dice) => {
     const result = dice.update();
     if (result !== null) {
+      const dieType = `D${dice.sides}`;
       resultDisplay.textContent = `You rolled: ${result}`;
-      addToHistory(result);
+      addToHistory(result, dieType);
     }
   });
 

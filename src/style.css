@@ -46,7 +46,8 @@ body {
   visibility: hidden;
 }
 
-button {
+button,
+.dieButton {
   padding: 12px 24px;
   font-size: 16px;
   font-weight: 600;
@@ -58,11 +59,13 @@ button {
   transition: background-color 0.3s;
 }
 
-button:hover {
+button:hover,
+.dieButton:hover {
   background-color: #535bf2;
 }
 
-button:active {
+button:active,
+.dieButton:active {
   transform: scale(0.95);
 }
 
@@ -98,10 +101,22 @@ button:active {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding: 8px 10px;
   background-color: rgba(100, 108, 255, 0.2);
   border-radius: 6px;
   font-size: 14px;
+}
+
+.history-die-type {
+  font-size: 12px;
+  font-weight: bold;
+  color: #646cff;
+  background-color: rgba(100, 108, 255, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 30px;
+  text-align: center;
 }
 
 .history-number {
