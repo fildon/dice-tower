@@ -59,3 +59,52 @@ button:hover {
 button:active {
   transform: scale(0.95);
 }
+
+#history {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 200px;
+  max-height: calc(100vh - 40px);
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  padding: 15px;
+  color: white;
+  overflow-y: auto;
+}
+
+#history h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 2px solid #646cff;
+  padding-bottom: 8px;
+}
+
+#historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background-color: rgba(100, 108, 255, 0.2);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.history-number {
+  font-size: 20px;
+  font-weight: bold;
+  color: #646cff;
+}
+
+.history-time {
+  font-size: 11px;
+  color: #aaa;
+}

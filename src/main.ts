@@ -155,6 +155,33 @@ const diceList: Dice[] = [];
 // Result display
 const resultDisplay = document.getElementById('result') as HTMLDivElement;
 
+// History tracking
+const historyList = document.getElementById('historyList') as HTMLDivElement;
+
+function addToHistory(roll: number) {
+  const historyItem = document.createElement('div');
+  historyItem.className = 'history-item';
+  
+  const numberSpan = document.createElement('span');
+  numberSpan.className = 'history-number';
+  numberSpan.textContent = roll.toString();
+  
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'history-time';
+  timeSpan.textContent = new Date().toLocaleTimeString();
+  
+  historyItem.appendChild(numberSpan);
+  historyItem.appendChild(timeSpan);
+  
+  // Add to top of list
+  historyList.insertBefore(historyItem, historyList.firstChild);
+  
+  // Keep only last 20 rolls
+  while (historyList.children.length > 20) {
+    historyList.removeChild(historyList.lastChild!);
+  }
+}
+
 // Roll button
 const rollButton = document.getElementById('rollButton') as HTMLButtonElement;
 rollButton.addEventListener('click', () => {
@@ -191,6 +218,7 @@ function animate() {
     const result = dice.update();
     if (result !== null) {
       resultDisplay.textContent = `You rolled: ${result}`;
+      addToHistory(result);
     }
   });
 
