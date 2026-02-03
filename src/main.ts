@@ -1,10 +1,12 @@
 import './style.css';
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Dice } from './Dice';
 
 // Scene setup
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-const scene = new THREE.Scene();
+export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a1a);
 
 // Camera setup
@@ -23,6 +25,15 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+// Camera controls
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 3, 0); // Center on the tower
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 30;
+controls.maxPolarAngle = Math.PI / 2; // Prevent camera from going below ground
+
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
@@ -37,13 +48,13 @@ directionalLight.shadow.camera.bottom = -10;
 scene.add(directionalLight);
 
 // Physics world
-const world = new CANNON.World();
+export const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
 world.broadphase = new CANNON.NaiveBroadphase();
 
 // Materials
 const groundMaterial = new CANNON.Material('ground');
-const diceMaterial = new CANNON.Material('dice');
+export const diceMaterial = new CANNON.Material('dice');
 const contactMaterial = new CANNON.ContactMaterial(groundMaterial, diceMaterial, {
   friction: 0.3,
   restitution: 0.3,
@@ -78,7 +89,11 @@ function createTowerWall(
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const mesh = new THREE.Mesh(
     geometry,
-    new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+    new THREE.MeshStandardMaterial({ 
+      color: 0x8b4513,
+      transparent: true,
+      opacity: 0.6
+    })
   );
   mesh.position.set(x, y, z);
   mesh.castShadow = true;
@@ -90,80 +105,62 @@ function createTowerWall(
   body.addShape(shape);
   body.position.set(x, y, z);
   world.addBody(body);
+
+  return { mesh, body };
 }
 
 // Build the dice tower
-// Back wall
-createTowerWall(0, 3, -2, 3, 6, 0.2);
-// Left wall (upper)
-createTowerWall(-1.5, 5, 0, 0.2, 2, 3);
-// Right wall (upper)
-createTowerWall(1.5, 5, 0, 0.2, 2, 3);
-// Left wall (lower)
-createTowerWall(-1.5, 2, 1.5, 0.2, 4, 1);
-// Right wall (lower)
-createTowerWall(1.5, 2, 1.5, 0.2, 4, 1);
-// Ramp 1
-createTowerWall(0.5, 4.5, 0, 2, 0.1, 2);
-scene.children[scene.children.length - 1].rotation.z = -0.3;
-// Ramp 2
-createTowerWall(-0.5, 2.5, 1, 2, 0.1, 2);
-scene.children[scene.children.length - 1].rotation.z = 0.3;
+const towerWidth = 3;
+const towerDepth = 3;
+const towerHeight = 8;
+const wallThickness = 0.15;
 
-// Dice class
-class Dice {
-  mesh: THREE.Mesh;
-  body: CANNON.Body;
+// Back wall (full height)
+createTowerWall(0, towerHeight / 2, -towerDepth / 2, towerWidth, towerHeight, wallThickness);
 
-  constructor(x: number, y: number, z: number) {
-    const size = 0.5;
-    const geometry = new THREE.BoxGeometry(size, size, size);
-    const materials = [
-      new THREE.MeshStandardMaterial({ color: 0xff0000 }),
-      new THREE.MeshStandardMaterial({ color: 0x00ff00 }),
-      new THREE.MeshStandardMaterial({ color: 0x0000ff }),
-      new THREE.MeshStandardMaterial({ color: 0xffff00 }),
-      new THREE.MeshStandardMaterial({ color: 0xff00ff }),
-      new THREE.MeshStandardMaterial({ color: 0x00ffff }),
-    ];
-    this.mesh = new THREE.Mesh(geometry, materials);
-    this.mesh.castShadow = true;
-    this.mesh.receiveShadow = true;
-    scene.add(this.mesh);
+// Left wall (full height)
+createTowerWall(-towerWidth / 2, towerHeight / 2, 0, wallThickness, towerHeight, towerDepth);
 
-    const shape = new CANNON.Box(new CANNON.Vec3(size / 2, size / 2, size / 2));
-    this.body = new CANNON.Body({
-      mass: 1,
-      material: diceMaterial,
-      linearDamping: 0.3,
-      angularDamping: 0.3,
-    });
-    this.body.addShape(shape);
-    this.body.position.set(x, y, z);
-    this.body.velocity.set(
-      (Math.random() - 0.5) * 2,
-      -2,
-      (Math.random() - 0.5) * 2
-    );
-    this.body.angularVelocity.set(
-      Math.random() * 10,
-      Math.random() * 10,
-      Math.random() * 10
-    );
-    world.addBody(this.body);
-  }
+// Right wall (full height)
+createTowerWall(towerWidth / 2, towerHeight / 2, 0, wallThickness, towerHeight, towerDepth);
 
-  update() {
-    this.mesh.position.copy(this.body.position as any);
-    this.mesh.quaternion.copy(this.body.quaternion as any);
-  }
-}
+// Front wall with gap at bottom (upper portion only)
+const frontWallHeight = towerHeight - 2; // Leave 2 units gap at bottom
+const frontWallYPos = 2 + frontWallHeight / 2; // Start 2 units up from ground
+createTowerWall(0, frontWallYPos, towerDepth / 2, towerWidth, frontWallHeight, wallThickness);
+
+// Internal obstacle walls (rotating to jostle the dice)
+const rotatingObstacles: Array<{ mesh: THREE.Mesh; body: CANNON.Body; speed: number; axis: 'x' | 'y' | 'z' }> = [];
+
+// Upper obstacle - rotates around Y axis
+const obstacle1 = createTowerWall(0.3, 6, -0.3, 1, wallThickness, 1.5);
+obstacle1.mesh.rotation.z = -0.3;
+obstacle1.body.quaternion.setFromEuler(0, 0, -0.3);
+rotatingObstacles.push({ ...obstacle1, speed: 0.5, axis: 'y' });
+
+// Middle obstacle - rotates around Y axis (opposite direction)
+const obstacle2 = createTowerWall(-0.3, 4, 0.3, 1, wallThickness, 1.5);
+obstacle2.mesh.rotation.z = 0.3;
+obstacle2.body.quaternion.setFromEuler(0, 0, 0.3);
+rotatingObstacles.push({ ...obstacle2, speed: -0.7, axis: 'y' });
+
+// Lower obstacle - rotates around Y axis
+const obstacle3 = createTowerWall(0.2, 2, -0.2, 1, wallThickness, 1.2);
+obstacle3.mesh.rotation.z = -0.3;
+obstacle3.body.quaternion.setFromEuler(0, 0, -0.3);
+rotatingObstacles.push({ ...obstacle3, speed: 0.6, axis: 'y' });
 
 const diceList: Dice[] = [];
+
+// Result display
+const resultDisplay = document.getElementById('result') as HTMLDivElement;
 
 // Roll button
 const rollButton = document.getElementById('rollButton') as HTMLButtonElement;
 rollButton.addEventListener('click', () => {
+  // Clear result display
+  resultDisplay.textContent = '';
+  
   // Clear old dice
   diceList.forEach((dice) => {
     scene.remove(dice.mesh);
@@ -171,8 +168,8 @@ rollButton.addEventListener('click', () => {
   });
   diceList.length = 0;
 
-  // Add new dice at the top of the tower
-  const dice = new Dice(0, 8, -1.5);
+  // Add new dice at the top of the tower (centered, near the back)
+  const dice = new Dice(0, 7.5, -0.5, scene, world, diceMaterial);
   diceList.push(dice);
 });
 
@@ -184,8 +181,20 @@ function animate() {
   const deltaTime = Math.min(clock.getDelta(), 0.1);
   world.step(1 / 60, deltaTime, 3);
 
-  diceList.forEach((dice) => dice.update());
+  // Update rotating obstacles
+  rotatingObstacles.forEach((obstacle) => {
+    obstacle.mesh.rotation[obstacle.axis] += obstacle.speed * deltaTime;
+    obstacle.body.quaternion.copy(obstacle.mesh.quaternion as any);
+  });
 
+  diceList.forEach((dice) => {
+    const result = dice.update();
+    if (result !== null) {
+      resultDisplay.textContent = `You rolled: ${result}`;
+    }
+  });
+
+  controls.update();
   renderer.render(scene, camera);
 }
 
