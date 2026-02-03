@@ -162,7 +162,19 @@ const resultDisplay = document.getElementById('result') as HTMLDivElement;
 // History tracking
 const historyList = document.getElementById('historyList') as HTMLDivElement;
 
+// Add default empty state
+const emptyMessage = document.createElement('div');
+emptyMessage.className = 'history-empty';
+emptyMessage.textContent = 'No rolls yet!';
+historyList.appendChild(emptyMessage);
+
 function addToHistory(roll: number) {
+  // Remove empty message if it exists
+  const emptyMessage = historyList.querySelector('.history-empty');
+  if (emptyMessage) {
+    historyList.removeChild(emptyMessage);
+  }
+  
   const historyItem = document.createElement('div');
   historyItem.className = 'history-item';
   
