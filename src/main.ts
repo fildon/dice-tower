@@ -4,7 +4,7 @@ import * as CANNON from 'cannon-es';
 import { Dice } from './Dice';
 import { TowerBuilder } from './TowerBuilder';
 import { HistoryManager } from './HistoryManager';
-import { setupCamera, setupControls, setupLighting, setupRenderer, setupGround } from './SceneSetup';
+import { setupCamera, setupControls, setupLighting, setupRenderer, setupGround } from './utils/scene-setup';
 import { type DiceType } from './types';
 import { PHYSICS, SCENE, ANIMATION, DICE_SPAWN } from './constants';
 

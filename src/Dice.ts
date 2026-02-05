@@ -1,9 +1,9 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
-import * as DiceGeometry from './DiceGeometry';
+import * as DiceGeometry from './utils/dice-geometry';
 import { DICE_BASE_SIZE, DICE_SIZE_FACTORS, DICE_REST, PHYSICS } from './constants';
-import { createDiceMaterials } from './TextureGenerator';
-import { getTopFaceIndex, getD4LowestVertex } from './FaceNormalCalculator';
+import { createDiceMaterials } from './utils/texture-utils';
+import { getTopFaceIndex, getD4LowestVertex } from './utils/face-calculator';
 
 // Dice class
 export class Dice {

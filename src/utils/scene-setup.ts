@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { CAMERA, LIGHTING, SCENE } from './constants';
+import { CAMERA, LIGHTING, SCENE } from '../constants';
 
 export function setupCamera(aspectRatio: number): THREE.PerspectiveCamera {
     const camera = new THREE.PerspectiveCamera(

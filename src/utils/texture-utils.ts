@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { TEXTURE } from './constants';
+import { TEXTURE } from '../constants';
 
 export function createDiceTexture(number: number): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');

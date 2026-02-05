@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { type ChamferedGeometry } from './types';
+import { type ChamferedGeometry } from '../types';
 
 // Adapted from threejs-dice library for modern Three.js
 
