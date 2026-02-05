@@ -4,7 +4,7 @@ import * as CANNON from 'cannon-es';
 import { Dice } from './Dice';
 import { TowerBuilder } from './TowerBuilder';
 import { HistoryManager } from './HistoryManager';
-import { SceneSetup } from './SceneSetup';
+import { setupCamera, setupControls, setupLighting, setupRenderer, setupGround } from './SceneSetup';
 import { type DiceType } from './types';
 import { PHYSICS, SCENE, ANIMATION, DICE_SPAWN } from './constants';
 
@@ -14,16 +14,16 @@ export const scene = new THREE.Scene();
 scene.background = new THREE.Color(SCENE.BACKGROUND_COLOR);
 
 // Camera setup
-const camera = SceneSetup.setupCamera(window.innerWidth / window.innerHeight);
+const camera = setupCamera(window.innerWidth / window.innerHeight);
 
 // Renderer setup
-const renderer = SceneSetup.setupRenderer(canvas);
+const renderer = setupRenderer(canvas);
 
 // Camera controls
-const controls = SceneSetup.setupControls(camera, canvas);
+const controls = setupControls(camera, canvas);
 
 // Lighting
-SceneSetup.setupLighting(scene);
+setupLighting(scene);
 
 // Physics world
 export const world = new CANNON.World();
@@ -40,7 +40,7 @@ const contactMaterial = new CANNON.ContactMaterial(groundMaterial, diceMaterial,
 world.addContactMaterial(contactMaterial);
 
 // Ground
-SceneSetup.setupGround(scene);
+setupGround(scene);
 
 const groundShape = new CANNON.Plane();
 const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });

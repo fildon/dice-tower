@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CAMERA, LIGHTING, SCENE } from './constants';
 
-export class SceneSetup {
-  static setupCamera(aspectRatio: number): THREE.PerspectiveCamera {
+export function setupCamera(aspectRatio: number): THREE.PerspectiveCamera {
     const camera = new THREE.PerspectiveCamera(
       CAMERA.FOV,
       aspectRatio,
@@ -15,7 +14,7 @@ export class SceneSetup {
     return camera;
   }
 
-  static setupControls(camera: THREE.Camera, canvas: HTMLCanvasElement): OrbitControls {
+export function setupControls(camera: THREE.Camera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
     controls.target.set(CAMERA.TARGET.x, CAMERA.TARGET.y, CAMERA.TARGET.z);
     controls.enableDamping = true;
@@ -26,7 +25,7 @@ export class SceneSetup {
     return controls;
   }
 
-  static setupLighting(scene: THREE.Scene): void {
+export function setupLighting(scene: THREE.Scene): void {
     // Ambient light
     const ambientLight = new THREE.AmbientLight(0xffffff, LIGHTING.AMBIENT_INTENSITY);
     scene.add(ambientLight);
@@ -46,7 +45,7 @@ export class SceneSetup {
     scene.add(directionalLight);
   }
 
-  static setupRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
+export function setupRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -54,15 +53,14 @@ export class SceneSetup {
     return renderer;
   }
 
-  static setupGround(scene: THREE.Scene): THREE.Mesh {
-    const groundGeometry = new THREE.PlaneGeometry(SCENE.GROUND_SIZE, SCENE.GROUND_SIZE);
-    const groundMesh = new THREE.Mesh(
-      groundGeometry,
-      new THREE.MeshStandardMaterial({ color: SCENE.GROUND_COLOR })
-    );
-    groundMesh.rotation.x = -Math.PI / 2;
-    groundMesh.receiveShadow = true;
-    scene.add(groundMesh);
-    return groundMesh;
-  }
+export function setupGround(scene: THREE.Scene): THREE.Mesh {
+  const groundGeometry = new THREE.PlaneGeometry(SCENE.GROUND_SIZE, SCENE.GROUND_SIZE);
+  const groundMesh = new THREE.Mesh(
+    groundGeometry,
+    new THREE.MeshStandardMaterial({ color: SCENE.GROUND_COLOR })
+  );
+  groundMesh.rotation.x = -Math.PI / 2;
+  groundMesh.receiveShadow = true;
+  scene.add(groundMesh);
+  return groundMesh;
 }

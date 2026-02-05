@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { type ChamferedGeometry } from './types';
 
 // Adapted from threejs-dice library for modern Three.js
-export class DiceGeometry {
-  static createD4Geometry(size: number): THREE.BufferGeometry {
+
+export function createD4Geometry(size: number): THREE.BufferGeometry {
     // D4 vertices - each vertex represents one number (1-4)
     // The number at the bottom vertex is the result
     const vertices = [
@@ -21,10 +21,10 @@ export class DiceGeometry {
       [0, 3, 2, 3], // Face opposite to vertex 1 (value 3) - shows "3"
       [1, 2, 3, 4]  // Face opposite to vertex 0 (value 4) - shows "4"
     ];
-    return this.createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.96);
+    return createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.96);
   }
 
-  static createD6Geometry(size: number): THREE.BufferGeometry {
+export function createD6Geometry(size: number): THREE.BufferGeometry {
     const vertices = [
       [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
       [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]
@@ -33,10 +33,10 @@ export class DiceGeometry {
       [0, 3, 2, 1, 1], [1, 2, 6, 5, 2], [0, 1, 5, 4, 3],
       [3, 7, 6, 2, 4], [0, 4, 7, 3, 5], [4, 5, 6, 7, 6]
     ];
-    return this.createGeometry(vertices, faces, size, 0.1, Math.PI / 4, 0.96);
+    return createGeometry(vertices, faces, size, 0.1, Math.PI / 4, 0.96);
   }
 
-  static createD8Geometry(size: number): THREE.BufferGeometry {
+export function createD8Geometry(size: number): THREE.BufferGeometry {
     const vertices = [
       [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]
     ];
@@ -44,10 +44,10 @@ export class DiceGeometry {
       [0, 2, 4, 1], [0, 4, 3, 2], [0, 3, 5, 3], [0, 5, 2, 4],
       [1, 3, 4, 5], [1, 4, 2, 6], [1, 2, 5, 7], [1, 5, 3, 8]
     ];
-    return this.createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.965);
+    return createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.965);
   }
 
-  static createD10Geometry(size: number): THREE.BufferGeometry {
+export function createD10Geometry(size: number): THREE.BufferGeometry {
     // Pentagonal trapezohedron - using the proven threejs-dice vertex arrangement
     const vertices: number[][] = [];
     for (let i = 0, b = 0; i < 10; ++i, b += Math.PI * 2 / 10) {
@@ -82,10 +82,10 @@ export class DiceGeometry {
       [9, 8, 0, -1],
       [9, 0, 1, -1]
     ];
-    return this.createGeometry(vertices, faces, size, 0, Math.PI * 6 / 5, 0.945);
+    return createGeometry(vertices, faces, size, 0, Math.PI * 6 / 5, 0.945);
   }
 
-  static createD12Geometry(size: number): THREE.BufferGeometry {
+export function createD12Geometry(size: number): THREE.BufferGeometry {
     const p = (1 + Math.sqrt(5)) / 2;
     const q = 1 / p;
 
@@ -100,10 +100,10 @@ export class DiceGeometry {
       [6, 18, 2, 0, 16, 5], [18, 11, 9, 14, 2, 6], [1, 17, 10, 8, 13, 7], [1, 13, 5, 15, 3, 8],
       [13, 8, 12, 4, 5, 9], [5, 4, 14, 9, 15, 10], [0, 12, 8, 10, 16, 11], [3, 19, 7, 17, 1, 12]
     ];
-    return this.createGeometry(vertices, faces, size, 0.2, -Math.PI / 4 / 2, 0.968);
+    return createGeometry(vertices, faces, size, 0.2, -Math.PI / 4 / 2, 0.968);
   }
 
-  static createD20Geometry(size: number): THREE.BufferGeometry {
+export function createD20Geometry(size: number): THREE.BufferGeometry {
     const t = (1 + Math.sqrt(5)) / 2;
 
     const vertices = [
@@ -117,10 +117,10 @@ export class DiceGeometry {
       [3, 9, 4, 11], [3, 4, 2, 12], [3, 2, 6, 13], [3, 6, 8, 14], [3, 8, 9, 15],
       [4, 9, 5, 16], [2, 4, 11, 17], [6, 2, 10, 18], [8, 6, 7, 19], [9, 8, 1, 20]
     ];
-    return this.createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.955);
+    return createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.955);
   }
 
-  private static createGeometry(
+function createGeometry(
     vertexData: number[][],
     faceData: number[][],
     radius: number,
@@ -132,7 +132,7 @@ export class DiceGeometry {
     const vertices = vertexData.map(v => new THREE.Vector3(v[0], v[1], v[2]));
     
     // Apply chamfering
-    const chamfered = this.applyChamfer(vertices, faceData, chamfer);
+    const chamfered = applyChamfer(vertices, faceData, chamfer);
     
     // Create geometry
     const positions: number[] = [];
@@ -215,11 +215,11 @@ export class DiceGeometry {
     return geometry;
   }
 
-  private static applyChamfer(
-    vectors: THREE.Vector3[],
-    faces: number[][],
-    chamfer: number
-  ): ChamferedGeometry {
+function applyChamfer(
+  vectors: THREE.Vector3[],
+  faces: number[][],
+  chamfer: number
+): ChamferedGeometry {
     const chamferVectors: THREE.Vector3[] = [];
     const chamferFaces: number[][] = [];
     const cornerFaces: number[][] = new Array(vectors.length).fill(null).map(() => []);
@@ -303,5 +303,4 @@ export class DiceGeometry {
     }
 
     return { vectors: chamferVectors, faces: chamferFaces };
-  }
 }

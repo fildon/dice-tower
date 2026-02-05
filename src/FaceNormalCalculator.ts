@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 
-export class FaceNormalCalculator {
-  /**
-   * Calculate which face is most aligned with the up vector (world Y+)
-   */
-  static getTopFaceIndex(mesh: THREE.Mesh): number {
+/**
+ * Calculate which face is most aligned with the up vector (world Y+)
+ */
+export function getTopFaceIndex(mesh: THREE.Mesh): number {
     const up = new THREE.Vector3(0, 1, 0);
     const geometry = mesh.geometry as THREE.BufferGeometry;
     const groups = geometry.groups;
@@ -58,12 +57,12 @@ export class FaceNormalCalculator {
     });
     
     return topFaceIndex;
-  }
+}
 
-  /**
-   * Special case for D4: find the lowest vertex in world space
-   */
-  static getD4LowestVertex(mesh: THREE.Mesh): number {
+/**
+ * Special case for D4: find the lowest vertex in world space
+ */
+export function getD4LowestVertex(mesh: THREE.Mesh): number {
     mesh.updateMatrixWorld();
     const geometry = mesh.geometry as THREE.BufferGeometry;
     const positions = geometry.attributes.position;
@@ -87,5 +86,4 @@ export class FaceNormalCalculator {
     }
     
     return lowestVertexIndex;
-  }
 }

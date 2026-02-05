@@ -1,9 +1,9 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
-import { DiceGeometry } from './DiceGeometry';
+import * as DiceGeometry from './DiceGeometry';
 import { DICE_BASE_SIZE, DICE_SIZE_FACTORS, DICE_REST, PHYSICS } from './constants';
-import { TextureGenerator } from './TextureGenerator';
-import { FaceNormalCalculator } from './FaceNormalCalculator';
+import { createDiceMaterials } from './TextureGenerator';
+import { getTopFaceIndex, getD4LowestVertex } from './FaceNormalCalculator';
 
 // Dice class
 export class Dice {
@@ -32,31 +32,31 @@ export class Dice {
     switch (sides) {
       case 4:
         geometry = DiceGeometry.createD4Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(4);
+        materials = createDiceMaterials(4);
         break;
       case 6:
         geometry = DiceGeometry.createD6Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(6);
+        materials = createDiceMaterials(6);
         break;
       case 8:
         geometry = DiceGeometry.createD8Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(8);
+        materials = createDiceMaterials(8);
         break;
       case 10:
         geometry = DiceGeometry.createD10Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(10);
+        materials = createDiceMaterials(10);
         break;
       case 12:
         geometry = DiceGeometry.createD12Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(12);
+        materials = createDiceMaterials(12);
         break;
       case 20:
         geometry = DiceGeometry.createD20Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(20);
+        materials = createDiceMaterials(20);
         break;
       default:
         geometry = DiceGeometry.createD6Geometry(size);
-        materials = TextureGenerator.createDiceMaterials(6);
+        materials = createDiceMaterials(6);
     }
     
     this.mesh = new THREE.Mesh(geometry, materials);
@@ -237,12 +237,12 @@ export class Dice {
   private getTopFace(): number {
     // Special case for D4 - find the lowest vertex (the result is the opposite number)
     if (this.sides === 4) {
-      const lowestVertexIndex = FaceNormalCalculator.getD4LowestVertex(this.mesh);
+      const lowestVertexIndex = getD4LowestVertex(this.mesh);
       return lowestVertexIndex + 1;
     }
     
     // For other dice, find the face most aligned with up vector
-    const topFaceIndex = FaceNormalCalculator.getTopFaceIndex(this.mesh);
+    const topFaceIndex = getTopFaceIndex(this.mesh);
     
     if (topFaceIndex === 0) {
       // Fallback to random if no valid face found
