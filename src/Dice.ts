@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import * as DiceGeometry from './utils/dice-geometry';
 import { DICE_REST, PHYSICS } from './constants';
 import { createDiceMaterials } from './utils/texture-utils';
-import { getTopFaceIndex, getD4LowestVertex } from './utils/face-calculator';
+import { getTopFaceIndex, getD4BottomFaceIndex } from './utils/face-calculator';
 
 // Dice class
 export class Dice {
@@ -62,6 +62,11 @@ export class Dice {
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     scene.add(this.mesh);
+
+    // Add vertex labels for D4
+    if (sides === 4) {
+      this.addD4VertexLabels();
+    }
 
     // Create physics body with shape matching the visual geometry
     const shape = this.createPhysicsShape(sides);
@@ -247,11 +252,59 @@ export class Dice {
     return null;
   }
 
+  private addD4VertexLabels(): void {
+    // D4 vertex positions and their values
+    // Vertices: 0=[1,1,1]=4, 1=[-1,-1,1]=3, 2=[-1,1,-1]=2, 3=[1,-1,-1]=1
+    const vertexData = [
+      { pos: new THREE.Vector3(1, 1, 1).multiplyScalar(0.4), value: 4 },
+      { pos: new THREE.Vector3(-1, -1, 1).multiplyScalar(0.4), value: 3 },
+      { pos: new THREE.Vector3(-1, 1, -1).multiplyScalar(0.4), value: 2 },
+      { pos: new THREE.Vector3(1, -1, -1).multiplyScalar(0.4), value: 1 }
+    ];
+
+    vertexData.forEach(({ pos, value }) => {
+      // Create canvas texture for sprite
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      
+      // Black background circle
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(32, 32, 28, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // White text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 40px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(value.toString(), 32, 32);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: texture,
+        transparent: true,
+        depthWrite: false,
+        depthTest: true
+      });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(0.5, 0.5, 1);
+      sprite.renderOrder = 1; // Render after ground (which has default renderOrder 0)
+      
+      // Offset sprite slightly outward from die center so it appears in front
+      const offset = pos.clone().normalize().multiplyScalar(0.15);
+      sprite.position.copy(pos.clone().add(offset));
+      
+      this.mesh.add(sprite);
+    });
+  }
+
   private getTopFace(): number {
-    // Special case for D4 - find the lowest vertex (the result is the opposite number)
+    // Special case for D4 - find the bottom face (touching table)
     if (this.sides === 4) {
-      const lowestVertexIndex = getD4LowestVertex(this.mesh);
-      return lowestVertexIndex + 1;
+      return getD4BottomFaceIndex(this.mesh);
     }
     
     // For other dice, find the face most aligned with up vector

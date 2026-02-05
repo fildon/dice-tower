@@ -55,12 +55,14 @@ export function setupRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
 
 export function setupGround(scene: THREE.Scene): THREE.Mesh {
   const groundGeometry = new THREE.PlaneGeometry(SCENE.GROUND_SIZE, SCENE.GROUND_SIZE);
-  const groundMesh = new THREE.Mesh(
-    groundGeometry,
-    new THREE.MeshStandardMaterial({ color: SCENE.GROUND_COLOR })
-  );
+  const groundMaterial = new THREE.MeshStandardMaterial({ 
+    color: SCENE.GROUND_COLOR,
+    depthWrite: false
+  });
+  const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
   groundMesh.rotation.x = -Math.PI / 2;
   groundMesh.receiveShadow = true;
+  groundMesh.renderOrder = -1; // Render before everything else
   scene.add(groundMesh);
   return groundMesh;
 }

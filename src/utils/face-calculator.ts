@@ -60,30 +60,62 @@ export function getTopFaceIndex(mesh: THREE.Mesh): number {
 }
 
 /**
- * Special case for D4: find the lowest vertex in world space
+ * Special case for D4: find the face most aligned with the down vector
+ * The D4 lands with one face flat on the ground.
+ * The material index of the bottom face determines the result.
  */
-export function getD4LowestVertex(mesh: THREE.Mesh): number {
-    mesh.updateMatrixWorld();
+export function getD4BottomFaceIndex(mesh: THREE.Mesh): number {
+    const down = new THREE.Vector3(0, -1, 0);
     const geometry = mesh.geometry as THREE.BufferGeometry;
-    const positions = geometry.attributes.position;
+    const groups = geometry.groups;
     
-    let minY = Infinity;
-    let lowestVertexIndex = 0;
-    
-    // Check first vertex of each face (0, 3, 6, 9 in our geometry)
-    for (let i = 0; i < 12; i += 3) {
-      const localPos = new THREE.Vector3(
-        positions.getX(i),
-        positions.getY(i),
-        positions.getZ(i)
-      );
-      const worldPos = localPos.applyMatrix4(mesh.matrixWorld);
-      
-      if (worldPos.y < minY) {
-        minY = worldPos.y;
-        lowestVertexIndex = Math.floor(i / 9);
-      }
+    if (groups.length === 0) {
+      return 1;
     }
     
-    return lowestVertexIndex;
+    let maxDot = -Infinity;
+    let bottomFaceIndex = 1;
+    
+    groups.forEach((group) => {
+      if (!group.materialIndex || group.materialIndex <= 0) return;
+      
+      const positions = geometry.attributes.position;
+      const startIndex = group.start;
+      
+      // Get three vertices of the first triangle in the group
+      const v0 = new THREE.Vector3(
+        positions.getX(startIndex),
+        positions.getY(startIndex),
+        positions.getZ(startIndex)
+      );
+      const v1 = new THREE.Vector3(
+        positions.getX(startIndex + 1),
+        positions.getY(startIndex + 1),
+        positions.getZ(startIndex + 1)
+      );
+      const v2 = new THREE.Vector3(
+        positions.getX(startIndex + 2),
+        positions.getY(startIndex + 2),
+        positions.getZ(startIndex + 2)
+      );
+      
+      // Calculate face normal in local space
+      const normal = new THREE.Vector3()
+        .crossVectors(
+          new THREE.Vector3().subVectors(v1, v0),
+          new THREE.Vector3().subVectors(v2, v0)
+        )
+        .normalize();
+      
+      // Transform to world space
+      const worldNormal = normal.applyQuaternion(mesh.quaternion);
+      const dot = worldNormal.dot(down);
+      
+      if (dot > maxDot && group.materialIndex) {
+        maxDot = dot;
+        bottomFaceIndex = group.materialIndex;
+      }
+    });
+    
+    return bottomFaceIndex;
 }

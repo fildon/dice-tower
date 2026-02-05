@@ -22,13 +22,36 @@ export function createDiceTexture(number: number): THREE.CanvasTexture {
   return new THREE.CanvasTexture(canvas);
 }
 
+export function createD4Texture(_faceNumber: number): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = TEXTURE.CANVAS_SIZE;
+  canvas.height = TEXTURE.CANVAS_SIZE;
+  const ctx = canvas.getContext('2d')!;
+  
+  // Plain white face - labels will be on vertex sprites instead
+  ctx.fillStyle = TEXTURE.BACKGROUND_COLOR;
+  ctx.fillRect(0, 0, TEXTURE.CANVAS_SIZE, TEXTURE.CANVAS_SIZE);
+  
+  return new THREE.CanvasTexture(canvas);
+}
+
 export function createDiceMaterials(numFaces: number): THREE.MeshStandardMaterial[] {
   const materials: THREE.MeshStandardMaterial[] = [];
   
   // Blank material for -1 indices (always first)
   materials.push(new THREE.MeshStandardMaterial({ color: 0xffffff }));
   
-  if (numFaces === 10) {
+  if (numFaces === 4) {
+    // For D4: create special textures with numbers at each corner
+    for (let i = 0; i < 4; i++) {
+      const texture = createD4Texture(i + 1);
+      materials.push(new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: TEXTURE.ROUGHNESS,
+        metalness: TEXTURE.METALNESS,
+      }));
+    }
+  } else if (numFaces === 10) {
     // For D10: create materials 1-10
     for (let i = 1; i <= 10; i++) {
       const texture = createDiceTexture(i);
