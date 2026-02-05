@@ -1,6 +1,9 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { DiceGeometry } from './DiceGeometry';
+import { DICE_BASE_SIZE, DICE_SIZE_FACTORS, DICE_REST, PHYSICS } from './constants';
+import { TextureGenerator } from './TextureGenerator';
+import { FaceNormalCalculator } from './FaceNormalCalculator';
 
 // Dice class
 export class Dice {
@@ -20,20 +23,7 @@ export class Dice {
     sides: number = 6
   ) {
     this.sides = sides;
-    const baseSize = 0.5;
-    
-    // Scale factors to normalize dice sizes (approximate diameter)
-    // These ensure all dice have roughly the same bounding sphere
-    const sizeFactors: { [key: number]: number } = {
-      4: 0.8,   // D4 is naturally smaller
-      6: 1.0,   // D6 is our baseline
-      8: 1.3,   // D8 is small, needs to be bigger
-      10: 1.0,  // D10 is about right
-      12: 0.7,  // D12 is large, scale down
-      20: 0.5   // D20 is very large, scale down significantly
-    };
-    
-    const size = baseSize * (sizeFactors[sides] || 1.0);
+    const size = DICE_BASE_SIZE * (DICE_SIZE_FACTORS[sides] || 1.0);
     
     // Create geometry based on die type
     let geometry: THREE.BufferGeometry;
@@ -42,31 +32,31 @@ export class Dice {
     switch (sides) {
       case 4:
         geometry = DiceGeometry.createD4Geometry(size);
-        materials = this.createDiceMaterials(4);
+        materials = TextureGenerator.createDiceMaterials(4);
         break;
       case 6:
         geometry = DiceGeometry.createD6Geometry(size);
-        materials = this.createDiceMaterials(6);
+        materials = TextureGenerator.createDiceMaterials(6);
         break;
       case 8:
         geometry = DiceGeometry.createD8Geometry(size);
-        materials = this.createDiceMaterials(8);
+        materials = TextureGenerator.createDiceMaterials(8);
         break;
       case 10:
         geometry = DiceGeometry.createD10Geometry(size);
-        materials = this.createDiceMaterials(10);
+        materials = TextureGenerator.createDiceMaterials(10);
         break;
       case 12:
         geometry = DiceGeometry.createD12Geometry(size);
-        materials = this.createDiceMaterials(12);
+        materials = TextureGenerator.createDiceMaterials(12);
         break;
       case 20:
         geometry = DiceGeometry.createD20Geometry(size);
-        materials = this.createDiceMaterials(20);
+        materials = TextureGenerator.createDiceMaterials(20);
         break;
       default:
         geometry = DiceGeometry.createD6Geometry(size);
-        materials = this.createDiceMaterials(6);
+        materials = TextureGenerator.createDiceMaterials(6);
     }
     
     this.mesh = new THREE.Mesh(geometry, materials);
@@ -77,10 +67,10 @@ export class Dice {
     // Create physics body with shape matching the visual geometry
     const shape = this.createPhysicsShape(sides, size);
     this.body = new CANNON.Body({
-      mass: 1,
+      mass: PHYSICS.DICE_MASS,
       material: diceMaterial,
-      linearDamping: 0.4,
-      angularDamping: 0.4,
+      linearDamping: PHYSICS.LINEAR_DAMPING,
+      angularDamping: PHYSICS.ANGULAR_DAMPING,
     });
     this.body.addShape(shape);
     this.body.position.set(x, y, z);
@@ -222,74 +212,6 @@ export class Dice {
     }
   }
 
-  private createDiceMaterials(numFaces: number): THREE.MeshStandardMaterial[] {
-    // Create materials array
-    const materials: THREE.MeshStandardMaterial[] = [];
-    
-    // Blank material for -1 indices (always first)
-    materials.push(new THREE.MeshStandardMaterial({ color: 0xffffff }));
-    
-    if (numFaces === 10) {
-      // For D10: create materials 1-10
-      // Material indices 1-9 show "1"-"9", material index 10 shows "10"
-      for (let i = 1; i <= 10; i++) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128;
-        canvas.height = 128;
-        const ctx = canvas.getContext('2d')!;
-        
-        // Background
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, 128, 128);
-        
-        // Number
-        ctx.fillStyle = 'black';
-        ctx.font = 'bold 64px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        ctx.fillText(i.toString(), 64, 64);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        materials.push(new THREE.MeshStandardMaterial({ 
-          map: texture,
-          roughness: 0.5,
-          metalness: 0.1
-        }));
-      }
-    } else {
-      // Numbered materials for other dice
-      for (let i = 0; i < numFaces; i++) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128;
-        canvas.height = 128;
-        const ctx = canvas.getContext('2d')!;
-        
-        // Background
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, 128, 128);
-        
-        // Number
-        ctx.fillStyle = 'black';
-        ctx.font = 'bold 64px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const label = (i + 1).toString();
-        ctx.fillText(label, 64, 64);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        materials.push(new THREE.MeshStandardMaterial({ 
-          map: texture,
-          roughness: 0.5,
-          metalness: 0.1
-        }));
-      }
-    }
-    
-    return materials;
-  }
-
   update(): number | null {
     this.mesh.position.copy(this.body.position as any);
     this.mesh.quaternion.copy(this.body.quaternion as any);
@@ -298,9 +220,9 @@ export class Dice {
     const velocity = this.body.velocity.length();
     const angularVelocity = this.body.angularVelocity.length();
     
-    if (velocity < 0.1 && angularVelocity < 0.1) {
+    if (velocity < DICE_REST.VELOCITY_THRESHOLD && angularVelocity < DICE_REST.ANGULAR_VELOCITY_THRESHOLD) {
       this.restCheckDelay++;
-      if (this.restCheckDelay > 30 && !this.isAtRest) { // Wait 30 frames to be sure
+      if (this.restCheckDelay > DICE_REST.FRAME_DELAY && !this.isAtRest) {
         this.isAtRest = true;
         return this.getTopFace();
       }
@@ -315,90 +237,17 @@ export class Dice {
   private getTopFace(): number {
     // Special case for D4 - find the lowest vertex (the result is the opposite number)
     if (this.sides === 4) {
-      this.mesh.updateMatrixWorld();
-      const geometry = this.mesh.geometry as THREE.BufferGeometry;
-      const positions = geometry.attributes.position;
-      
-      // Find the vertex with the lowest world Y position
-      let minY = Infinity;
-      let lowestVertexIndex = 0;
-      
-      // Check first vertex of each face (0, 3, 6, 9 in our geometry)
-      for (let i = 0; i < 12; i += 3) {
-        const localPos = new THREE.Vector3(
-          positions.getX(i),
-          positions.getY(i),
-          positions.getZ(i)
-        );
-        const worldPos = localPos.applyMatrix4(this.mesh.matrixWorld);
-        
-        if (worldPos.y < minY) {
-          minY = worldPos.y;
-          lowestVertexIndex = Math.floor(i / 9); // Which face (0-3)
-        }
-      }
-      
-      // The face index + 1 is the value (since faces are ordered 1-4)
+      const lowestVertexIndex = FaceNormalCalculator.getD4LowestVertex(this.mesh);
       return lowestVertexIndex + 1;
     }
     
-    // Get the up vector in world space
-    const up = new THREE.Vector3(0, 1, 0);
+    // For other dice, find the face most aligned with up vector
+    const topFaceIndex = FaceNormalCalculator.getTopFaceIndex(this.mesh);
     
-    // Calculate which face normal is most aligned with up
-    const geometry = this.mesh.geometry as THREE.BufferGeometry;
-    const groups = geometry.groups;
-    
-    if (groups.length === 0) {
-      // Fallback to random
+    if (topFaceIndex === 0) {
+      // Fallback to random if no valid face found
       return Math.floor(Math.random() * this.sides) + 1;
     }
-    
-    let maxDot = -Infinity;
-    let topFaceIndex = 0;
-    
-    // Check each group (face) to see which is most upward-facing
-    groups.forEach((group) => {
-      if (!group.materialIndex || group.materialIndex <= 0) return; // Skip blank faces
-      
-      // Get a triangle from this group
-      const positions = geometry.attributes.position;
-      const startIndex = group.start;
-      
-      // Get three vertices of the first triangle in the group
-      const v0 = new THREE.Vector3(
-        positions.getX(startIndex),
-        positions.getY(startIndex),
-        positions.getZ(startIndex)
-      );
-      const v1 = new THREE.Vector3(
-        positions.getX(startIndex + 1),
-        positions.getY(startIndex + 1),
-        positions.getZ(startIndex + 1)
-      );
-      const v2 = new THREE.Vector3(
-        positions.getX(startIndex + 2),
-        positions.getY(startIndex + 2),
-        positions.getZ(startIndex + 2)
-      );
-      
-      // Calculate face normal in local space
-      const normal = new THREE.Vector3()
-        .crossVectors(
-          new THREE.Vector3().subVectors(v1, v0),
-          new THREE.Vector3().subVectors(v2, v0)
-        )
-        .normalize();
-      
-      // Transform to world space
-      const worldNormal = normal.applyQuaternion(this.mesh.quaternion);
-      const dot = worldNormal.dot(up);
-      
-      if (dot > maxDot && group.materialIndex) {
-        maxDot = dot;
-        topFaceIndex = group.materialIndex;
-      }
-    });
     
     // For D10, material index 10 represents "10", indices 1-9 represent "1"-"9"
     // (index 0 is blank for edge faces)

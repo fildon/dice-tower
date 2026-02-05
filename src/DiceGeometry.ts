@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { type ChamferedGeometry } from './types';
 
 // Adapted from threejs-dice library for modern Three.js
 export class DiceGeometry {
@@ -218,7 +219,7 @@ export class DiceGeometry {
     vectors: THREE.Vector3[],
     faces: number[][],
     chamfer: number
-  ): { vectors: THREE.Vector3[]; faces: number[][] } {
+  ): ChamferedGeometry {
     const chamferVectors: THREE.Vector3[] = [];
     const chamferFaces: number[][] = [];
     const cornerFaces: number[][] = new Array(vectors.length).fill(null).map(() => []);
