@@ -3,7 +3,20 @@ import { type ChamferedGeometry } from '../types';
 
 // Adapted from threejs-dice library for modern Three.js
 
-export function createD4Geometry(size: number): THREE.BufferGeometry {
+const BASE_SIZE = 0.5;
+
+// Size factors to normalize dice dimensions (approximate diameter)
+const SIZE_FACTORS = {
+  D4: 0.8,
+  D6: 0.8,
+  D8: 1.3,
+  D10: 1.0,
+  D12: 0.6,
+  D20: 0.5,
+} as const;
+
+export function createD4Geometry(): THREE.BufferGeometry {
+    const size = BASE_SIZE * SIZE_FACTORS.D4;
     // D4 vertices - each vertex represents one number (1-4)
     // The number at the bottom vertex is the result
     const vertices = [
@@ -24,7 +37,8 @@ export function createD4Geometry(size: number): THREE.BufferGeometry {
     return createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.96);
   }
 
-export function createD6Geometry(size: number): THREE.BufferGeometry {
+export function createD6Geometry(): THREE.BufferGeometry {
+    const size = BASE_SIZE * SIZE_FACTORS.D6;
     const vertices = [
       [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
       [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]
@@ -36,7 +50,8 @@ export function createD6Geometry(size: number): THREE.BufferGeometry {
     return createGeometry(vertices, faces, size, 0.1, Math.PI / 4, 0.96);
   }
 
-export function createD8Geometry(size: number): THREE.BufferGeometry {
+export function createD8Geometry(): THREE.BufferGeometry {
+    const size = BASE_SIZE * SIZE_FACTORS.D8;
     const vertices = [
       [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]
     ];
@@ -47,7 +62,8 @@ export function createD8Geometry(size: number): THREE.BufferGeometry {
     return createGeometry(vertices, faces, size, 0, -Math.PI / 4 / 2, 0.965);
   }
 
-export function createD10Geometry(size: number): THREE.BufferGeometry {
+export function createD10Geometry(): THREE.BufferGeometry {
+    const size = BASE_SIZE * SIZE_FACTORS.D10;
     // Pentagonal trapezohedron - using the proven threejs-dice vertex arrangement
     const vertices: number[][] = [];
     for (let i = 0, b = 0; i < 10; ++i, b += Math.PI * 2 / 10) {
@@ -85,7 +101,8 @@ export function createD10Geometry(size: number): THREE.BufferGeometry {
     return createGeometry(vertices, faces, size, 0, Math.PI * 6 / 5, 0.945);
   }
 
-export function createD12Geometry(size: number): THREE.BufferGeometry {
+export function createD12Geometry(): THREE.BufferGeometry {
+    const size = BASE_SIZE * SIZE_FACTORS.D12;
     const p = (1 + Math.sqrt(5)) / 2;
     const q = 1 / p;
 
@@ -103,7 +120,8 @@ export function createD12Geometry(size: number): THREE.BufferGeometry {
     return createGeometry(vertices, faces, size, 0.2, -Math.PI / 4 / 2, 0.968);
   }
 
-export function createD20Geometry(size: number): THREE.BufferGeometry {
+export function createD20Geometry(): THREE.BufferGeometry {
+    const size = BASE_SIZE * SIZE_FACTORS.D20;
     const t = (1 + Math.sqrt(5)) / 2;
 
     const vertices = [

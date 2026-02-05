@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import * as DiceGeometry from './utils/dice-geometry';
-import { DICE_BASE_SIZE, DICE_SIZE_FACTORS, DICE_REST, PHYSICS } from './constants';
+import { DICE_REST, PHYSICS } from './constants';
 import { createDiceMaterials } from './utils/texture-utils';
 import { getTopFaceIndex, getD4LowestVertex } from './utils/face-calculator';
 
@@ -23,7 +23,6 @@ export class Dice {
     sides: number = 6
   ) {
     this.sides = sides;
-    const size = DICE_BASE_SIZE * (DICE_SIZE_FACTORS[sides] || 1.0);
     
     // Create geometry based on die type
     let geometry: THREE.BufferGeometry;
@@ -31,31 +30,31 @@ export class Dice {
     
     switch (sides) {
       case 4:
-        geometry = DiceGeometry.createD4Geometry(size);
+        geometry = DiceGeometry.createD4Geometry();
         materials = createDiceMaterials(4);
         break;
       case 6:
-        geometry = DiceGeometry.createD6Geometry(size);
+        geometry = DiceGeometry.createD6Geometry();
         materials = createDiceMaterials(6);
         break;
       case 8:
-        geometry = DiceGeometry.createD8Geometry(size);
+        geometry = DiceGeometry.createD8Geometry();
         materials = createDiceMaterials(8);
         break;
       case 10:
-        geometry = DiceGeometry.createD10Geometry(size);
+        geometry = DiceGeometry.createD10Geometry();
         materials = createDiceMaterials(10);
         break;
       case 12:
-        geometry = DiceGeometry.createD12Geometry(size);
+        geometry = DiceGeometry.createD12Geometry();
         materials = createDiceMaterials(12);
         break;
       case 20:
-        geometry = DiceGeometry.createD20Geometry(size);
+        geometry = DiceGeometry.createD20Geometry();
         materials = createDiceMaterials(20);
         break;
       default:
-        geometry = DiceGeometry.createD6Geometry(size);
+        geometry = DiceGeometry.createD6Geometry();
         materials = createDiceMaterials(6);
     }
     
@@ -65,7 +64,7 @@ export class Dice {
     scene.add(this.mesh);
 
     // Create physics body with shape matching the visual geometry
-    const shape = this.createPhysicsShape(sides, size);
+    const shape = this.createPhysicsShape(sides);
     this.body = new CANNON.Body({
       mass: PHYSICS.DICE_MASS,
       material: diceMaterial,
@@ -87,7 +86,19 @@ export class Dice {
     world.addBody(this.body);
   }
 
-  private createPhysicsShape(sides: number, size: number): CANNON.Shape {
+  private createPhysicsShape(sides: number): CANNON.Shape {
+    // Size factors matching visual geometry
+    const baseSize = 0.5;
+    const sizeFactors: { [key: number]: number } = {
+      4: 0.8,
+      6: 1.0,
+      8: 1.3,
+      10: 1.0,
+      12: 0.7,
+      20: 0.5,
+    };
+    const size = baseSize * (sizeFactors[sides] || 1.0);
+    
     // Create collision shapes that match the visual geometry
     switch (sides) {
       case 4: // Tetrahedron
@@ -219,8 +230,10 @@ export class Dice {
     // Check if dice is at rest
     const velocity = this.body.velocity.length();
     const angularVelocity = this.body.angularVelocity.length();
+    const isNearGround = this.body.position.y < DICE_REST.GROUND_LEVEL_THRESHOLD;
     
-    if (velocity < DICE_REST.VELOCITY_THRESHOLD && angularVelocity < DICE_REST.ANGULAR_VELOCITY_THRESHOLD) {
+    // Only record result if die is at rest AND near ground level
+    if (velocity < DICE_REST.VELOCITY_THRESHOLD && angularVelocity < DICE_REST.ANGULAR_VELOCITY_THRESHOLD && isNearGround) {
       this.restCheckDelay++;
       if (this.restCheckDelay > DICE_REST.FRAME_DELAY && !this.isAtRest) {
         this.isAtRest = true;
